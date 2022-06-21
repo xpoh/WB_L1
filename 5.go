@@ -18,23 +18,24 @@ import (
 )
 
 func main() {
-	N := 5 * time.Second
+	N := 10 * time.Second
 
-	ct := context.Background() // context for workers cancel
-	ctx, _ := context.WithTimeout(ct, N)
-	wg := sync.WaitGroup{} // waitgroup for wait for all work done
+	ct := context.Background()                // context for workers cancel
+	ctx, cancel := context.WithTimeout(ct, N) // Set timout
+	wg := sync.WaitGroup{}                    // waitgroup for wait for all work done
 
-	ch := make(chan int)                 // main channel for random data
-	exit := make(chan os.Signal)         // chan for sig_term (ctrl+c)
-	signal.Notify(exit, syscall.SIGTERM) // notify for ctrl+c
+	ch := make(chan int)                               // main channel for random data
+	exit := make(chan os.Signal, 1)                    // chan for SIGINT (ctrl+c)
+	signal.Notify(exit, os.Interrupt, syscall.SIGTERM) // notify for ctrl+c
 
 	wg.Add(1)   // inc for one worker
 	go func() { // run worker
+		defer wg.Done()
 		for {
 			select {
 			case <-ctx.Done(): // check for job done
-				fm
-				break
+				fmt.Println("Terminate worker by timeout")
+				return
 			case c := <-ch: // check data in chan
 				fmt.Println(c)
 			}
@@ -43,10 +44,15 @@ func main() {
 
 	for {
 		select {
-		case <-ctx.Done(): // check SIG_TERM
-			ctx.Done() // terminate all workers
-			wg.Wait()  // wait while terminate
-			break
+		case <-ctx.Done(): // check SIGINT
+			fmt.Println("Stop main by timeout")
+			wg.Wait() // wait while terminate
+			return
+		case sig := <-exit: // check SIGINT
+			fmt.Println(sig)
+			cancel()  // terminate all workers
+			wg.Wait() // wait while terminate
+			return
 		default:
 			ch <- rand.Int() // put random data in chan
 		}
