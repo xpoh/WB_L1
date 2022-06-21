@@ -25,9 +25,9 @@ func main() {
 	ctx, cancel := context.WithCancel(ct)
 	wg := sync.WaitGroup{} // waitgroup for wait for all work done
 
-	ch := make(chan int)                 // main channel for random data
-	exit := make(chan os.Signal)         // chan for sig_term (ctrl+c)
-	signal.Notify(exit, syscall.SIGTERM) // notify for ctrl+c
+	ch := make(chan int)                // main channel for random data
+	exit := make(chan os.Signal)        // chan for SIGINT (ctrl+c)
+	signal.Notify(exit, syscall.SIGINT) // notify for ctrl+c
 
 	for i := 0; i < N; i++ {
 		wg.Add(1)   // inc for one worker
@@ -35,6 +35,8 @@ func main() {
 			for {
 				select {
 				case <-ctx.Done(): // check for job done
+					wg.Done()
+					fmt.Println("Terminate worker.")
 					break
 				case c := <-ch: // check data in chan
 					fmt.Println(c)
@@ -45,7 +47,8 @@ func main() {
 
 	for {
 		select {
-		case <-exit: // check SIG_TERM
+		case sig := <-exit: // check SIGINT
+			fmt.Println(sig)
 			cancel()  // terminate all workers
 			wg.Wait() // wait while terminate
 			break
