@@ -18,6 +18,10 @@ package main
 
 var justString string
 
+func createHugeString(int) string {
+	return "hello"
+}
+
 func someFunc() {
 	justString = createHugeString(100)
 }
