@@ -10,7 +10,7 @@ import (
 
 func ReverseWords(strs []string) []string {
 	var result []string
-	for i, _ := range strs {
+	for i := range strs {
 		result = append(result, strs[len(strs)-i-1])
 	}
 	return result
@@ -20,7 +20,7 @@ type StringToSliceAdapter interface {
 	ReverseString(str string) string
 }
 
-func (i *InMenoryAdapter) ReverseString(str string) string {
+func (i *InMemoryAdapter) ReverseString(str string) string {
 	var r string
 	sl := strings.Split(str, " ")
 	sl = ReverseWords(sl)
@@ -30,10 +30,10 @@ func (i *InMenoryAdapter) ReverseString(str string) string {
 	return r[1:]
 }
 
-type InMenoryAdapter struct{}
+type InMemoryAdapter struct{}
 
 func main() {
-	ia := InMenoryAdapter{}
+	ia := InMemoryAdapter{}
 	str := "12345 111111 2222222"
 	fmt.Println("String =", str)
 	fmt.Println("Reverse word =", ia.ReverseString(str))
